@@ -3,6 +3,32 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* hero sectiondark blue gradient  */
+  --hero-bg-gradient: linear-gradient(
+    180deg,
+    #0e1522 0%,
+    #131c2d 40%,
+    #152238 65%,
+    #0f1929 100%
+  );
+
+  /* auth card – neon border glow */
+  --neon-glow: 0 0 12px rgba(88, 166, 255, 0.4),
+    0 0 24px rgba(88, 166, 255, 0.2),
+    inset 0 0 24px rgba(88, 166, 255, 0.03);
+  --neon-border: 1px solid rgba(88, 166, 255, 0.5);
+}
+
+/* auth version card  special neon border */
+.card-auth-neon {
+  border: var(--neon-border);
+  box-shadow: var(--neon-glow);
+}
+.card-auth-neon:hover {
+  box-shadow: 0 0 16px rgba(88, 166, 255, 0.5),
+    0 0 32px rgba(88, 166, 255, 0.25),
+    inset 0 0 32px rgba(88, 166, 255, 0.05);
 }
 
 @theme inline {
