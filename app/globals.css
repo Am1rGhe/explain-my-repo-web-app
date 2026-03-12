@@ -1,10 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* base colors */
+  --background: #0d1117;
+  --foreground: #f0f6fc;
 
-  /* hero sectiondark blue gradient  */
+  /* semantic colors for the app */
+  --color-page-bg: #0d1117;
+  --color-text-main: #f0f6fc;
+  --color-text-muted: #8b949e;
+  --color-border-subtle: #30363d;
+  --color-card-bg: #161b22;
+  --color-button-muted: #21262d;
+  --color-accent-red: #f85149;
+  --color-accent-red-hover: #da3633;
+
+  /* hero section – dark blue gradient (GitHub-style) */
   --hero-bg-gradient: linear-gradient(
     180deg,
     #0e1522 0%,
@@ -20,7 +31,7 @@
   --neon-border: 1px solid rgba(88, 166, 255, 0.5);
 }
 
-/* auth version card  special neon border */
+/* auth version card – special neon border */
 .card-auth-neon {
   border: var(--neon-border);
   box-shadow: var(--neon-glow);
@@ -34,6 +45,15 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  /* app palette – use as text-app-muted, border-app-border, bg-app-card, etc. */
+  --color-app-page: var(--color-page-bg);
+  --color-app-main: var(--color-text-main);
+  --color-app-muted: var(--color-text-muted);
+  --color-app-border: var(--color-border-subtle);
+  --color-app-card: var(--color-card-bg);
+  --color-app-button: var(--color-button-muted);
+  --color-app-red: var(--color-accent-red);
+  --color-app-red-hover: var(--color-accent-red-hover);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
