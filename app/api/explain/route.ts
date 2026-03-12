@@ -152,12 +152,18 @@ ${repoContent}
 USER QUESTION:
 ${question}`;
 
-// add the result now 
-const result = await model.generateContent(prompt);
-const text = result.response.text();
-
-// return response as a json file
-return NextResponse.json({answer: text})
-
-
+  // return response as a json file and handle the error
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    return NextResponse.json({ answer: text });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json(
+      {
+        error: "AI request failed ",
+      },
+      { status: 502 }
+    );
+  }
 }
