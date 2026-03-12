@@ -1,3 +1,4 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 
 // adding url function helper
@@ -116,8 +117,47 @@ export async function POST(request: NextRequest) {
     repoContent = await fetchRepoContent(owner, repo, "master");
   }
 
-  return NextResponse.json({
-    answer: "fetched repo. length : " + repoContent.length,
-    debug: repoContent.slice(0, 800),
-  });
+  // check if we have the gemini api key
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey)
+    return NextResponse.json(
+      { error: "Server missing gemini api key" },
+      { status: 500 }
+    );
+
+  // create gemini client and the version
+  const genAi = new GoogleGenerativeAI(apiKey);
+  const model = genAi.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+  // add the prompt
+  const prompt = `You are an expert software engineer helping a developer understand a GitHub repository.
+
+You must answer ONLY based on the provided repository content.
+Do not invent files, functions, or behavior that are not present in the provided content.
+If the answer is not clearly supported by the repository content, say that you do not have enough information.
+
+When possible:
+- mention the relevant file path(s)
+- refer to specific functions, components, or code structure
+- keep the answer concise, clear, and practical
+
+Format your response like this:
+1. Short answer
+2. Relevant file(s)
+3. Brief explanation
+
+REPOSITORY CONTENT:
+${repoContent}
+
+USER QUESTION:
+${question}`;
+
+// add the result now 
+const result = await model.generateContent(prompt);
+const text = result.response.text();
+
+// return response as a json file
+return NextResponse.json({answer: text})
+
+
 }
