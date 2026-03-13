@@ -1,0 +1,29 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// one chat = one repo conversation
+model Chat {
+  id        String    @id @default(cuid())
+  userEmail String    // from NextAuth session (session.user.email)
+  repoUrl   String
+  title     String    // e.g. first question snippet or repo name
+  createdAt DateTime  @default(now())
+  messages  Message[]
+}
+
+// each message in a chat
+model Message {
+  id        String   @id @default(cuid())
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role      String   // "user" | "assistant"
+  content   String
+  createdAt DateTime @default(now())
+}
