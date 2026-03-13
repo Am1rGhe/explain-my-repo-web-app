@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+type ChatItem = { id: string; title: string; repoUrl: string; createdAt: string };
 
 export default function ChatPage() {
   // state
@@ -17,11 +19,38 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { data: session, status } = useSession();
-  // search by owner (forgot URL)
+  // current chat id 
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [chats, setChats] = useState<ChatItem[]>([]);
+  const [chatsLoading, setChatsLoading] = useState(false);
+  // search by owner
   const [ownerSearch, setOwnerSearch] = useState("");
   const [ownerRepos, setOwnerRepos] = useState<{ name: string; fullName: string; url: string }[]>([]);
   const [ownerLoading, setOwnerLoading] = useState(false);
   const [ownerError, setOwnerError] = useState<string | null>(null);
+
+  // Load chat list when signed in
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    setChatsLoading(true);
+    fetch("/api/chats")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.chats) setChats(data.chats);
+      })
+      .catch(() => {})
+      .finally(() => setChatsLoading(false));
+  }, [status]);
+
+  // persist a single message to the current chat 
+  async function persistMessage(role: "user" | "assistant", content: string) {
+    if (!currentChatId) return;
+    await fetch(`/api/chats/${currentChatId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role, content }),
+    });
+  }
 
   // send message handler
   async function handleSend(e: React.FormEvent) {
@@ -34,7 +63,32 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
 
+    const isSignedIn = status === "authenticated";
+    let chatId = currentChatId;
+
     try {
+      // if signed in and this is the first message, create a new chat
+      if (isSignedIn && !chatId) {
+        const title = question.trim().slice(0, 80) || repoUrl;
+        const createRes = await fetch("/api/chats", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ repoUrl, title }),
+        });
+        const createData = await createRes.json();
+        if (!createRes.ok) {
+          setError(createData.error || "Failed to create chat");
+          setLoading(false);
+          return;
+        }
+        chatId = createData.id;
+        setCurrentChatId(chatId);
+        setChats((prev) => [{ id: createData.id, title: createData.title, repoUrl: createData.repoUrl, createdAt: createData.createdAt }, ...prev]);
+        await persistMessage("user", question.trim());
+      } else if (isSignedIn && chatId) {
+        await persistMessage("user", question.trim());
+      }
+
       const res = await fetch("/api/explain", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -55,6 +109,10 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, assistantMessage]);
       setHasStarted(true);
       setQuestion("");
+
+      if (isSignedIn && chatId) {
+        await persistMessage("assistant", data.answer || "");
+      }
     } catch {
       setError("Network error");
     } finally {
@@ -106,11 +164,12 @@ export default function ChatPage() {
               : "Chat about a GitHub repo"}
           </p>
         </div>
-        <div className="p-4">
+        <div className="p-4 flex flex-col gap-3">
           {/* new chat button  */}
           <button
             type="button"
             onClick={() => {
+              setCurrentChatId(null);
               setRepoUrl("");
               setQuestion("");
               setMessages([]);
@@ -121,6 +180,49 @@ export default function ChatPage() {
           >
             + New chat
           </button>
+          {/* chat history  */}
+          {status === "authenticated" && (
+            <div className="flex flex-col gap-1">
+              <p className="text-xs text-app-muted font-medium">Chat history</p>
+              {chatsLoading ? (
+                <p className="text-xs text-app-muted">Loading…</p>
+              ) : chats.length === 0 ? (
+                <p className="text-xs text-app-muted">No chats yet</p>
+              ) : (
+                <ul className="max-h-48 overflow-y-auto space-y-1">
+                  {chats.map((chat) => (
+                    <li key={chat.id}>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setCurrentChatId(chat.id);
+                          setError(null);
+                          try {
+                            const res = await fetch(`/api/chats/${chat.id}`);
+                            const data = await res.json();
+                            if (!res.ok) throw new Error(data.error || "Failed to load");
+                            setRepoUrl(data.repoUrl || "");
+                            setMessages(data.messages || []);
+                            setHasStarted((data.messages?.length ?? 0) > 0);
+                          } catch {
+                            setError("Failed to load chat");
+                          }
+                        }}
+                        className={`w-full text-left text-xs truncate rounded px-2 py-1.5 transition-colors cursor-pointer ${
+                          currentChatId === chat.id
+                            ? "bg-app-border text-app-main"
+                            : "text-app-muted hover:text-app-main hover:bg-app-border/50"
+                        }`}
+                        title={chat.repoUrl}
+                      >
+                        {chat.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
         <div className="mt-auto p-4 space-y-3 border-t border-app-border">
           {status === "loading" && (
