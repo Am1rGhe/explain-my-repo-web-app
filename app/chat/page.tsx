@@ -28,6 +28,7 @@ export default function ChatPage() {
   const [ownerRepos, setOwnerRepos] = useState<{ name: string; fullName: string; url: string }[]>([]);
   const [ownerLoading, setOwnerLoading] = useState(false);
   const [ownerError, setOwnerError] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Load chat list when signed in
   useEffect(() => {
@@ -149,20 +150,48 @@ export default function ChatPage() {
       className="min-h-screen text-app-main flex"
       style={{ background: "var(--hero-bg-gradient)" }}
     >
+      {/* mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close menu"
+          className="fixed inset-0 z-20 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       {/* sidebar */}
-      <aside className="w-64 border-r border-app-border flex flex-col">
-        <div className="px-4 py-4 border-b border-app-border">
-          <Link
-            href="/"
-            className="text-lg font-semibold tracking-tight text-app-main hover:text-app-muted"
+      <aside
+        className={`
+          w-64 border-r border-app-border flex flex-col
+          fixed md:static inset-y-0 left-0 z-30
+          transform transition-transform duration-200 ease-out
+          md:transform-none
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          bg-app-page
+        `}
+      >
+        <div className="px-4 py-4 border-b border-app-border flex items-center justify-between gap-2">
+          <div className="flex flex-col min-w-0">
+            <Link
+              href="/"
+              className="text-lg font-semibold tracking-tight text-app-main hover:text-app-muted"
+            >
+              Explain my <span className="text-app-red">repo</span>
+            </Link>
+            <p className="text-xs text-app-muted mt-1">
+              {status === "authenticated" && session?.user
+                ? `Welcome, ${session.user.name ?? session.user.email ?? "there"}`
+                : "Chat about a GitHub repo"}
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label="Close menu"
+            className="md:hidden p-2 rounded-lg hover:bg-app-border text-app-muted shrink-0"
+            onClick={() => setSidebarOpen(false)}
           >
-            Explain my <span className="text-app-red">repo</span>
-          </Link>
-          <p className="text-xs text-app-muted mt-1">
-            {status === "authenticated" && session?.user
-              ? `Welcome, ${session.user.name ?? session.user.email ?? "there"}`
-              : "Chat about a GitHub repo"}
-          </p>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
         </div>
         <div className="p-4 flex flex-col gap-3">
           {/* new chat button  */}
@@ -260,9 +289,23 @@ export default function ChatPage() {
         </div>
       </aside>
       {/* conversation and input area */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex-1 flex flex-col min-w-0 md:min-w-0">
+        {/* mobile menu button */}
+        <div className="md:hidden flex items-center gap-2 px-3 py-2 border-b border-app-border/50">
+          <button
+            type="button"
+            aria-label="Open menu"
+            className="p-2 rounded-lg hover:bg-app-border text-app-muted"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
+          </button>
+          <Link href="/" className="text-sm font-medium text-app-muted hover:text-app-main">
+            Explain my <span className="text-app-red">repo</span>
+          </Link>
+        </div>
         {/* messages list */}
-        <div className="flex-1 w-full max-w-3xl mx-auto px-4 py-6 space-y-4 overflow-y-auto rounded-2xl bg-black/10 border border-app-border/40 backdrop-blur-sm">
+        <div className="flex-1 w-full max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 overflow-y-auto rounded-2xl bg-black/10 border border-app-border/40 backdrop-blur-sm">
           {messages.length === 0 && !loading && !error && (
             <p className="text-sm text-app-muted text-center mt-10">
               Start by pasting a GitHub repo URL and asking your first question.
@@ -301,7 +344,7 @@ export default function ChatPage() {
         {/* input area */}
         <form
           onSubmit={handleSend}
-          className="w-full max-w-3xl mx-auto px-4 pb-6 space-y-3"
+          className="w-full max-w-3xl mx-auto px-3 sm:px-4 pb-4 sm:pb-6 space-y-3"
         >
           {!hasStarted && (
             <>
@@ -315,7 +358,7 @@ export default function ChatPage() {
               />
               <div className="rounded-lg border border-app-border/60 bg-app-card/50 p-3 space-y-2">
                 <p className="text-xs text-app-muted">Forgot the URL? Search by owner (GitHub username)</p>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
                     value={ownerSearch}
@@ -327,13 +370,13 @@ export default function ChatPage() {
                       }
                     }}
                     placeholder="e.g. facebook, vercel"
-                    className="flex-1 rounded-lg border border-app-border bg-app-card px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-app-border"
+                    className="flex-1 rounded-lg border border-app-border bg-app-card px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-app-border min-w-0"
                   />
                   <button
                     type="button"
                     disabled={ownerLoading}
                     onClick={() => handleSearchByOwner()}
-                    className="rounded-lg bg-app-button hover:bg-app-border text-app-main text-sm font-medium px-3 py-2 disabled:opacity-60"
+                    className="rounded-lg bg-app-button hover:bg-app-border text-app-main text-sm font-medium px-3 py-2 disabled:opacity-60 shrink-0"
                   >
                     {ownerLoading ? "…" : "Find repos"}
                   </button>
@@ -364,7 +407,7 @@ export default function ChatPage() {
             </>
           )}
 
-          <div className="flex gap-2 items-end">
+          <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
@@ -386,7 +429,7 @@ export default function ChatPage() {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-app-red hover:bg-app-red-hover text-app-main text-sm font-medium px-4 py-2 disabled:opacity-60 cursor-pointer"
+              className="rounded-lg bg-app-red hover:bg-app-red-hover text-app-main text-sm font-medium px-4 py-2.5 sm:py-2 disabled:opacity-60 cursor-pointer shrink-0"
             >
               <span className="text-lg leading-none">↑</span>
               {!loading && <span className="sr-only">Send</span>}

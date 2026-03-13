@@ -14,7 +14,7 @@ export default function Home() {
       >
         {/* welcome + explanation */}
         <main className="min-h-full">
-          <section className="max-w-2xl mx-auto px-6 pt-16 pb-12 text-center">
+          <section className="max-w-2xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-10 sm:pb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-app-main">
             Explain my <span className="text-app-red">repo</span>
           </h1>
@@ -26,7 +26,7 @@ export default function Home() {
         </section>
 
         {/* two cards: normal vs auth */}
-        <section className="max-w-4xl mx-auto px-6 py-8">
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <h2 className="text-xl font-semibold text-app-main mb-6 text-center">
             Choose your experience
           </h2>
@@ -97,7 +97,7 @@ export default function Home() {
 
       {/* footer */}
       <footer className="border-t border-app-border py-8">
-        <div className="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-app-muted">
             Explain my repo, understand any GitHub codebase with AI.
           </p>
